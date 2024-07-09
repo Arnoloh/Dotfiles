@@ -1,0 +1,7 @@
+[init]
+	defaultBranch = master
+[core]
+	excludesfile = /~/.gitignore
+[user]
+	name = Arnoloh
+	email = arnaud.corcione@epita.fr

@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+message="Auto-Submission"
+tags=""
+files='*'
+
+#find . -regex '.*\.\(h\|c\)' -exec clang-format -style=file -i {} \;
+#find . \( -name \*.cc -o -name \*.hh \) -exec clang-format -style=file -i {} \;
+rm $(git rev-parse --show-toplevel)/.git/index.lock 2> /dev/null
+until [ $# -eq 0 ]; do
+
+    if [ "$1" = "-m" ] || [ "$1" = "--message" ];then
+        message=$2
+        shift 2
+    fi
+    if [ "$1" = "-t" ] || [ "$1" = "--tags" ]; then
+        [ $2 != "" ] && tags=$2 && shift 2
+    fi
+done
+git add .
+git status
+git commit -m "$message"
+if [ "$tags" = "" ]; then
+    git push
+else
+    git tag -ma "$tags"; git push --follow-tags
+fi
+exit 0
