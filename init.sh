@@ -12,7 +12,10 @@ echec() {
 git clone  git@github.com:Arnoloh/Dotfiles.git /tmp/dotfiles
 cd /tmp/dotfiles
 
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" 
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/loket/oh-my-zsh/feature/batch-mode/tools/install.sh)" -s --batch || {
+  echo "Could not install Oh My Zsh" >/dev/stderr
+  exit 1
+}
 
 cp /tmp/dotfiles/.zshrc ~/
 cp /tmp/dotfiles/mytheme.zsh-theme ~/.oh-my-zsh/themes/
