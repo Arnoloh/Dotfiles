@@ -18,7 +18,7 @@ plugins=(
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
-PATH= $PATH:/~/.config/command
+PATH= $PATH:~/.config/command
 alias py="python3"
 alias vim="nvim"
 alias cat="bat -pp"
