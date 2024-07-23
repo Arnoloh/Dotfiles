@@ -6,11 +6,11 @@ files='*'
 
 #find . -regex '.*\.\(h\|c\)' -exec clang-format -style=file -i {} \;
 #find . \( -name \*.cc -o -name \*.hh \) -exec clang-format -style=file -i {} \;
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    find . '(' -name \*.c -o -name \*.h ')' -a -exec clang-format -style=file -i {} \;
-else
-    clang-format-epita
-fi
+# if [[ "$OSTYPE" == "darwin"* ]]; then
+#     find . '(' -name \*.c -o -name \*.h ')' -a -exec clang-format -style=file -i {} \;
+# else
+#     clang-format-epita
+# fi
 rm $(git rev-parse --show-toplevel)/.git/index.lock 2> /dev/null
 until [ $# -eq 0 ]; do
 
