@@ -30,4 +30,7 @@ chmod 777 ~/.config/command/sub
 
 sed -i "s/macos/$(grep -E '^(NAME)=' /etc/os-release | sed 's/NAME="\(.*\)"/\1/g')/g" ~/.oh-my-zsh/themes/mytheme.zsh-theme
 
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 echec "Please install manually all plugin"
+
+rm -rf /tmp/dotfiles
