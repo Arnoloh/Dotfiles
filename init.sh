@@ -100,6 +100,8 @@ pass "The zsh-autosuggestions plugin has been installed successfully."
 
 git clone https://github.com/Arnoloh/nvim-config.git ~/.config/nvim || warn "nvim config already installed"
 
+curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh && pass "zoxide installed" 
+
 if [ "$PACKAGE_MANAGER" = "brew" ]; then
     brew install neovim
     pass "neovim has been installed."
@@ -108,7 +110,7 @@ elif [ "$PACKAGE_MANAGER" = "apt" ]; then
     sudo rm -rf /opt/nvim &&
     sudo tar -C /opt -xzf nvim-linux64.tar.gz &&
     ln -s /opt/nvim-linux64/bin/nvim ~/.config/command/nvim &&
-    pass "neovim has been installed." &&
+    pass "neovim has been installed."
 else
     warn "Please install neovim https://github.com/neovim/neovim/releases/"
 fi

@@ -42,4 +42,4 @@ cat() {
 }
 
 unsetopt autocd
-
+eval "$(zoxide init --cmd cd zsh)"
