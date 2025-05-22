@@ -40,6 +40,6 @@ cat() {
         /usr/bin/cat "$@"
     fi
 }
-
+export PATH=$PATH:~/.local/bin
 unsetopt autocd
 eval "$(zoxide init --cmd cd zsh)"
