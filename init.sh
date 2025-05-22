@@ -108,8 +108,9 @@ if [ "$PACKAGE_MANAGER" = "brew" ]; then
 elif [ "$PACKAGE_MANAGER" = "apt" ]; then
     curl -LO https://github.com/neovim/neovim-releases/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz || fail "neovim installation failed." &&
     sudo rm -rf /opt/nvim &&
-    sudo tar -C /opt -xzf nvim-linux64.tar.gz &&
-    ln -s /opt/nvim-linux64/bin/nvim ~/.config/command/nvim &&
+    sudo tar -C /opt -xzf nvim*.tar.gz &&
+    nvim_path=$(find /opt -type f -name nvim 2>/dev/null | head -n 1)
+    ln -sf "$nvim_path" ~/.config/command/nvim &&
     pass "neovim has been installed."
 else
     warn "Please install neovim https://github.com/neovim/neovim/releases/"
