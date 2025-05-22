@@ -109,8 +109,9 @@ elif [ "$PACKAGE_MANAGER" = "apt" ]; then
     curl -LO https://github.com/neovim/neovim-releases/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz || fail "neovim installation failed." &&
     sudo rm -rf /opt/nvim &&
     sudo tar -C /opt -xzf nvim*.tar.gz &&
-    nvim_path=$(find /opt -type f -name nvim 2>/dev/null | head -n 1)
-    ln -sf "$nvim_path" ~/.config/command/nvim &&
+    nvim_path=$(find /opt -type f -name nvim 2>/dev/null | head -n 1) || fail "Cannot find nvim in /opt"
+    ln -sf "$nvim_path" ~/.config/command/nvim || fail "cannot symlink nvim in ~/.config/command/" &&
+    nvim --headless "+Lazy! sync" +qa && 
     pass "neovim has been installed."
 else
     warn "Please install neovim https://github.com/neovim/neovim/releases/"
