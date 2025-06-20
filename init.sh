@@ -111,7 +111,7 @@ elif [ "$PACKAGE_MANAGER" = "apt" ]; then
     sudo tar -C /opt -xzf nvim*.tar.gz &&
     nvim_path=$(find /opt -type f -name nvim 2>/dev/null | head -n 1) || fail "Cannot find nvim in /opt"
     ln -sf "$nvim_path" ~/.config/command/nvim || fail "cannot symlink nvim in ~/.config/command/" &&
-    nvim --headless "+Lazy! sync" +qa && 
+    ${nvim_path} --headless "+Lazy! sync" +qa && 
     pass "neovim has been installed."
 else
     warn "Please install neovim https://github.com/neovim/neovim/releases/"
@@ -120,4 +120,6 @@ fi
 #  Cleanup
 rm -rf /tmp/dotfiles || fail "Failed to clean up temporary files."
 pass "Temporary files cleaned up successfully."
+pass "Please restart your shell"
+
 
