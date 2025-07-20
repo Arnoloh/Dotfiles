@@ -23,13 +23,17 @@ build_prompt () {
   local elapsed="$1"
   local color="$2"
 
-  # partie avant/​après commune – on garde $(...) littéraux grâce aux quotes simples
-  local prompt_head='$(virtualenv_prompt_info)%Bon: %{$fg_bold[red]%}$USER@%m %{$fg_bold[white]%}- %2~ - time: '
-  local prompt_tail='%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
+  if [ "$UID" -eq 0 ]; then
+    # partie avant/​après commune – on garde $(...) littéraux grâce aux quotes simples
+    prompt_head='$(virtualenv_prompt_info)%Bon: %{$fg_bold[red]%}$USER@%m %{$fg_bold[white]%}- %2~ - time: '
+  else
+    prompt_head='$(virtualenv_prompt_info)%Bon: %{$fg_bold[yellow]%}$USER@%m %{$fg_bold[white]%}- %2~ - time: '
+  fi
+  prompt_tail='%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
 %{$fg_bold[white]%}→%b '
 
   # on assemble la couleur et la durée entre les deux
-    PROMPT="${prompt_head}%{$fg_bold[${color}]%}${elapsed}${prompt_tail}"
+  PROMPT="${prompt_head}%{$fg_bold[${color}]%}${elapsed}${prompt_tail}"
 }
 
 # prompt par défaut (premier affichage)
