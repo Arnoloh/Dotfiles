@@ -1,82 +1,77 @@
-PROMPT_RED="%F{red}"
-if [[ $EUID -eq 0 ]]; then
-  PROMPT='%Bon: %{$fg_bold[red]%}$USER@%M %{$fg_bold[white]%}- %2~ - time: 0ms %{$fg_bold[white]%}- $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg[white]%}→%b '
-else
-  PROMPT='%Bon: %{$fg_bold[yellow]%}$USER@%M %{$fg_bold[white]%}- %2~ - time: 0ms %{$fg_bold[white]%}- $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg[white]%}→%b '
-fi
-
-#info
+ZSH_THEME_VIRTUALENV_PREFIX="(%{$fg_bold[cyan]%}"   # avant le « ( »
+ZSH_THEME_VIRTUALENV_SUFFIX="%{$reset_color%}) "
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[white]%}(%{$fg_bold[blue]%}on: %{$fg_bold[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%f)"
 ZSH_THEME_GIT_PROMPT_MODIFIED="test"
 ZSH_THEME_GIT_PROMPT_DIRTY=""
+# Choisis tes couleurs/formats :
+ZSH_THEME_VIRTUALENV_PROMPT_PREFIX="%{$fg_bold[cyan]%}("   # avant le nom
+ZSH_THEME_VIRTUALENV_PROMPT_SUFFIX=")%{$fg_bold[white]%} - " # après le nom
+
 #git status
 ZSH_THEME_GIT_PROMPT_ADDED="%{$fg[green]%} ✓"
 ZSH_THEME_GIT_PROMPT_MODIFIED="%{$fg[yellow]%} ●"
 ZSH_THEME_GIT_PROMPT_DELETED="%{$fg[red]%} ✘ "
 ZSH_THEME_GIT_PROMPT_RENAMED="%{$fg[blue]%} ●"
 ZSH_THEME_GIT_PROMPT_UNTRACKED="%{$fg_bold[red]%} ●"
+###############################################################################
+# 1.  Fonction utilitaire : construit la chaîne PROMPT
+###############################################################################
+#  $1 : durée déjà formatée (ex. « 1m23s », « 0.127s », « 15ms »)
+#  $2 : nom de la couleur (red | yellow | green | white…)
+build_prompt () {
+  local elapsed="$1"
+  local color="$2"
 
+  # partie avant/​après commune – on garde $(...) littéraux grâce aux quotes simples
+  local prompt_head='$(virtualenv_prompt_info)%Bon: %{$fg_bold[red]%}$USER@%m %{$fg_bold[white]%}- %2~ - time: '
+  local prompt_tail='%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
+%{$fg_bold[white]%}→%b '
+
+  # on assemble la couleur et la durée entre les deux
+    PROMPT="${prompt_head}%{$fg_bold[${color}]%}${elapsed}${prompt_tail}"
+}
+
+# prompt par défaut (premier affichage)
+build_prompt '0ms' 'white'
+
+###############################################################################
+# 2.  Hooks pré‑exec / pré‑cmd : calcul de la durée + appel à build_prompt
+###############################################################################
 prompt_preexec() {
-        prompt_prexec_realtime=${EPOCHREALTIME}
+  prompt_prexec_realtime=${EPOCHREALTIME}
 }
 
 prompt_precmd() {
-        if (( prompt_prexec_realtime )); then
-                local -rF elapsed_realtime=$(( EPOCHREALTIME - prompt_prexec_realtime ))
-                        local -rF s=$(( elapsed_realtime%60 ))
-                        local -ri elapsed_s=${elapsed_realtime}
-        local -ri m=$(( (elapsed_s/60)%60 ))
-                local -ri h=$(( elapsed_s/3600 ))
-                if (( h > 0 )); then
-                        printf -v prompt_elapsed_time '%ih%im' ${h} ${m}
-        elif (( m > 0 )); then
-                printf -v prompt_elapsed_time '%im%is' ${m} ${s}
-        elif (( s >= 10 )); then
-          if [[ $EUID -eq 0 ]]; then
-                PS1='%Bon: %{$fg_bold[red]%}$USER@%M %{$fg_bold[white]%}- %2~ - time: %{$fg_bold[red]%}${prompt_elapsed_time}%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg_bold[white]%}→%b '
-          else
-                PS1='%Bon: %{$fg_bold[yellow]%}$USER@%M %{$fg_bold[white]%}- %2~ - time: %{$fg_bold[red]%}${prompt_elapsed_time}%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg_bold[white]%}→%b '
-          fi
+  if (( prompt_prexec_realtime )); then
+    local -rF elapsed_realtime=$(( EPOCHREALTIME - prompt_prexec_realtime ))
+    local -rF s=$(( elapsed_realtime % 60 ))
+    local -ri elapsed_s=${elapsed_realtime}
+    local -ri m=$(( (elapsed_s / 60) % 60 ))
+    local -ri h=$(( elapsed_s / 3600 ))
 
+    if   (( h > 0 ));        then printf -v prompt_elapsed_time '%ih%im' ${h} ${m}; build_prompt "$prompt_elapsed_time" 'red'
+    elif (( m > 0 ));        then printf -v prompt_elapsed_time '%im%is' ${m} ${s}; build_prompt "$prompt_elapsed_time" 'red'
+    elif (( s >= 10 ));      then printf -v prompt_elapsed_time '%.2fs' ${s}; build_prompt "$prompt_elapsed_time" 'red'
+    elif (( s >= 1 ));       then printf -v prompt_elapsed_time '%.3fs' ${s}; build_prompt "$prompt_elapsed_time" 'yellow'
+    else                          printf -v prompt_elapsed_time '%ims' $(( s * 1000 )); build_prompt "$prompt_elapsed_time" 'green'
+    fi
 
-                printf -v prompt_elapsed_time '%.2fs' ${s} # 12.34s
-                elif
-                  if [[ $EUID -eq 0 ]]; then
-                PS1='%Bon: %{$fg_bold[red]%}$USER@%M %{$fg_bold[white]%}-  %2~ - time: %{$fg_bold[yellow]%}${prompt_elapsed_time}%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg[white]%}→%b '
-            else
-                PS1='%Bon: %{$fg_bold[yellow]%}$USER@%M %{$fg_bold[white]%}-  %2~ - time: %{$fg_bold[yellow]%}${prompt_elapsed_time}%{$fg_bold[white]%} - $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg[white]%}→%b '
-                  fi
-                (( s >= 1 )); then
-                printf -v prompt_elapsed_time '%.3fs' ${s} # 1.234s
-                else
-
-                  if [[ $EUID -eq 0 ]]; then
-                        PS1='%Bon: %{$fg_bold[red]%}$USER@%M %{$fg_bold[white]%}-  %2~ - time: %{$fg_bold[green]%}${prompt_elapsed_time} %{$fg_bold[white]%}- $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg_bold[white]%}→%b '
-            else
-                        PS1='%Bon: %{$fg_bold[yellow]%}$USER@%M %{$fg_bold[white]%}-  %2~ - time: %{$fg_bold[green]%}${prompt_elapsed_time} %{$fg_bold[white]%}- $(git_prompt_info) $(git_prompt_status) %{$fg[none]%}
-%{$fg_bold[white]%}→%b '
-                  fi
-                printf -v prompt_elapsed_time '%ims' $(( s*1000 ))
-                fi
-                unset prompt_prexec_realtime
-        else
-# Clear previous result when hitting ENTER with no command to execute
-                unset prompt_elapsed_time
-                        fi
+    unset prompt_prexec_realtime
+  else
+    # touche Entrée sans commande → on enlève la durée précédente
+    unset prompt_elapsed_time
+    build_prompt '0ms' 'white'
+  fi
 }
 
+###############################################################################
+# 3.  Options & hooks (inchangés)
+###############################################################################
 setopt nopromptbang prompt{cr,percent,sp,subst}
 
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec prompt_preexec
-add-zsh-hook precmd prompt_precmd
+add-zsh-hook precmd  prompt_precmd
 
 RPROMPT='%(?.%{$fg[green]%}✔%f.%{$fg[red]%}✘%f)'
