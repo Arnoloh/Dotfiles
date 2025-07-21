@@ -14,6 +14,7 @@ plugins=(
     colored-man-pages
     git
     zsh-autosuggestions
+    virtualenv
 )
 source $ZSH/oh-my-zsh.sh
 
