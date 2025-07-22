@@ -120,6 +120,5 @@ fi
 #  Cleanup
 rm -rf /tmp/dotfiles || fail "Failed to clean up temporary files."
 pass "Temporary files cleaned up successfully."
-pass "Please restart your shell"
-
+zsh
 
