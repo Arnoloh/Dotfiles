@@ -25,7 +25,7 @@ fi
 pass "Sudo privileges confirmed."
 
 # Define and install required packages
-PACKAGES="git curl wget zsh vim batcat bat gcc tldr zsh-syntax-highlighting"
+PACKAGES="git curl wget zsh vim batcat bat gcc tldr zsh-syntax-highlighting clangd make clang-format"
 
 if command -v apt >/dev/null 2>&1; then
     PACKAGE_MANAGER="apt"
