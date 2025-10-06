@@ -25,6 +25,7 @@ export VISUAL='nvim'
 
 
 vim() {
+
     if command -v nvim >/dev/null 2>&1; then
         nvim "$@"
     else
@@ -32,15 +33,20 @@ vim() {
     fi
 }
 
-cat() {
-    if command -v bat >/dev/null 2>&1; then
-        bat -pp "$@"
-    elif command -v batcat >/dev/null 2>&1; then
-        batcat -pp "$@"
-    else
-        /usr/bin/cat "$@"
+
+function cat() {
+  emulate -L zsh
+
+  if command -v bat >/dev/null 2>&1; then
+    if bat "$@" >/dev/null 2>&1; then
+      bat -pp "$@"
+      return
     fi
+  fi
+
+  command cat "$@"
 }
+
 export PATH=$PATH:~/.local/bin
 unsetopt autocd
 eval "$(zoxide init --cmd cd zsh)"

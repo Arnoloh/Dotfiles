@@ -1,52 +1,104 @@
-#!/bin/sh
-#
+#!/usr/bin/env bash
+set -euo pipefail
+
 message="Auto-Submission"
 tags=""
-files='*'
 
-#find . -regex '.*\.\(h\|c\)' -exec clang-format -style=file -i {} \;
-# find . \( -name \*.cc -o -name \*.hh \) -exec clang-format -style=file -i {} \;
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    find . '(' -name \*.c -o -name \*.h ')' -a -exec clang-format -style=file -i {} \;
+show_help() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -m, --message <msg>   Commit message (default: "Auto-Submission")
+  -t, --tags <tag>      Tag to push (e.g. "v*" for auto-increment)
+  -h, --help            Show this help message and exit
+
+Examples:
+  $(basename "$0") -m "fix: bug correction"
+  $(basename "$0") -m "release" -t "v*"
+  $(basename "$0") -t "build42"
+EOF
+}
+
+# ---- Prevent leftover Git locks
+rm -f "$(git rev-parse --show-toplevel)/.git/index.lock" 2>/dev/null || true
+
+# ---- Parse options with GNU getopt if available, otherwise fallback to getopts
+if command -v getopt >/dev/null 2>&1 && getopt --test >/dev/null 2>&1; then
+  # GNU getopt: supports long options
+  parsed_args=$(getopt -o m:t:h -l message:,tags:,help -n "$(basename "$0")" -- "$@") || {
+    echo "Error parsing options." >&2
+    exit 2
+  }
+  eval set -- "$parsed_args"
+  while true; do
+    case "${1:-}" in
+      -m|--message) message="${2:-}"; shift 2 ;;
+      -t|--tags)    tags="${2:-}";    shift 2 ;;
+      -h|--help)    show_help; exit 0 ;;
+      --) shift; break ;;
+      *)  break ;;
+    esac
+  done
 else
-    clang-format-epita
+  # Fallback: basic getopts support
+  args=()
+  while (( "$#" )); do
+    case "$1" in
+      --message) shift; args+=("-m" "${1:-}");;
+      --tags)    shift; args+=("-t" "${1:-}");;
+      --help)    args+=("-h");;
+      *)         args+=("$1");;
+    esac
+    shift || true
+  done
+  set -- "${args[@]}"
+  while getopts ":m:t:h" opt; do
+    case "$opt" in
+      m) message="$OPTARG" ;;
+      t) tags="$OPTARG" ;;
+      h) show_help; exit 0 ;;
+      \?) echo "Invalid option: -$OPTARG" >&2; exit 2 ;;
+      :)  echo "Option -$OPTARG requires an argument." >&2; exit 2 ;;
+    esac
+  done
+  shift $((OPTIND-1))
 fi
-rm $(git rev-parse --show-toplevel)/.git/index.lock 2> /dev/null
-until [ $# -eq 0 ]; do
 
-    if [ "$1" = "-m" ] || [ "$1" = "--message" ];then
-        message=$2
-        shift 2
-    fi
-    if [ "$1" = "-t" ] || [ "$1" = "--tags" ]; then
-        [ $2 != "" ] && tags=$2 && shift 2
-    fi
-done
-git add .
+# ---- Git add / commit
+git add -A
 git status
-git commit -m "$message"
-if [ "$tags" = "" ]; then
-    git push
+git commit -m "$message" || {
+  exit 1
+}
+
+# ---- Push & tagging (with increment if suffix '*')
+if [[ -z "${tags}" ]]; then
+  git push
 else
-    if [[ "$tags" == *"*"* ]]; then
-        # Retirer l'étoile du tag et récupérer le préfixe
-        tag_prefix=$(echo "$tags" | sed 's/\*//')
+  if [[ "$tags" == *"*"* ]]; then
+    tag_prefix="${tags//\*/}"
 
-        # Trouver le dernier tag correspondant à ce préfixe
-        last_tag=$(git tag --list "$tag_prefix*" | sort -V | tail -n 1)
+    last_tag="$(git tag --list "${tag_prefix}"'*' | sort -V | tail -n 1 || true)"
 
-        if [ -z "$last_tag" ]; then
-            new_tag="${tag_prefix}1"
-        else
-            last_number=$(echo "$last_tag" | sed "s/^$tag_prefix//")
-            new_number=$((last_number + 1))
-            new_tag="${tag_prefix}${new_number}"
-        fi
+    if [[ -z "$last_tag" ]]; then
+      new_tag="${tag_prefix}1"
     else
-        new_tag="$tags"
+      last_number="$(printf '%s' "$last_tag" | sed "s/^${tag_prefix}//")"
+      if [[ "$last_number" =~ ^[0-9]+$ ]]; then
+        new_number=$(( last_number + 1 ))
+      else
+        new_number=1
+      fi
+      new_tag="${tag_prefix}${new_number}"
     fi
+  else
+    new_tag="$tags"
+  fi
 
-    git tag -a "$new_tag" -m "$new_tag"
-    git push --follow-tags
+  git tag -a "$new_tag" -m "$new_tag"
+  git push --follow-tags
 fi
+
 exit 0
+
