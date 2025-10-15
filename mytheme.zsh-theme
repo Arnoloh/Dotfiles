@@ -77,5 +77,3 @@ setopt nopromptbang prompt{cr,percent,sp,subst}
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec prompt_preexec
 add-zsh-hook precmd  prompt_precmd
-
-RPROMPT='%(?.%{$fg[green]%}✔%f.%{$fg[red]%}✘%f)'
